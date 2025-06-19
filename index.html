@@ -286,7 +286,9 @@
                 const placeholderStringLiteral = '{{VUE_APP_GEMINI_API_KEY}}'; 
                 // USE DIRETAMENTE A CONSTANTE DECLARADA FORA DO SETUP
                 const actualInjectedValue = INJECTED_API_KEY; 
-
+console.log("DEBUG: actualInjectedValue:", actualInjectedValue);
+    console.log("DEBUG: placeholderStringLiteral:", placeholderStringLiteral);
+    console.log("DEBUG: isRunningOnGitHubPages:", window.location.hostname.endsWith('github.io'));
                 // Verifica se está rodando em um domínio de GitHub Pages padrão
                 const isRunningOnGitHubPages = window.location.hostname.endsWith('github.io');
 
@@ -323,6 +325,8 @@
                         displayValue.textContent = 'Não injetada ou vazia (verificar input manual)';
                     }
                 }
+console.log("DEBUG: apiKey.value after init:", apiKey.value);
+    console.log("DEBUG: isApiKeyInjected after init:", isApiKeyInjected.value);
             };
             
             // --- Funções para Interação com a API (Stubs) ---
