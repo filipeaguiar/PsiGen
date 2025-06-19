@@ -114,7 +114,7 @@
                     <!-- Definição da Persona -->
                     <div class="mb-6">
                         <label for="persona" class="block text-sm font-medium mb-1"><i class="fas fa-user-circle mr-2" style="color: var(--green);"></i>Defina sua Persona</label>
-                        <textarea v-model="persona" id="persona" rows="4" class="w-full px-3 py-2 border rounded-md shadow-sm focus:ring-2 focus:border-transparent" style="background-color: var(--base); border-color: var(--pink); color: var(--text); --tw-ring-color: var(--pink);" placeholder="Ex: Mães de primeira viagem..."></textarea>
+                        <textarea v-model="persona" id="persona" rows="4" class="w-full px-3 py-2 border rounded-md shadow-sm focus:ring-2 focus:border-transparent" style="background-color: var(--base); border-color: var(--pink); color: var(--text); --tw-ring-color: var(--pink);" :placeholder="personaPlaceholderText"></textarea>
                     </div>
 
                     <!-- Botão Gerar Pilares -->
@@ -130,7 +130,7 @@
                     <!-- Pilares de Conteúdo -->
                     <div class="mb-6">
                         <label for="pilares" class="block text-sm font-medium mb-1"><i class="fas fa-stream mr-2" style="color: var(--sapphire);"></i>Seus Pilares de Conteúdo</label>
-                        <textarea v-model="pilares" id="pilares" rows="4" class="w-full px-3 py-2 border rounded-md shadow-sm focus:ring-2 focus:border-transparent" style="background-color: var(--base); border-color: var(--pink); color: var(--text); --tw-ring-color: var(--pink);" placeholder="Ex: 1. Ansiedade e Estresse..."></textarea>
+                        <textarea v-model="pilares" id="pilares" rows="4" class="w-full px-3 py-2 border rounded-md shadow-sm focus:ring-2 focus:border-transparent" style="background-color: var(--base); border-color: var(--pink); color: var(--text); --tw-ring-color: var(--pink);" :placeholder="pilaresPlaceholderText"></textarea>
                     </div>
                     
                     <!-- Projeção Semanal -->
@@ -266,8 +266,10 @@
                 // --- Estado da Aplicação ---
                 const apiKey = ref('');
                 const isApiKeyInjected = ref(false);
-                const persona = ref('');
-                const pilares = ref('');
+                const persona = ref(localStorage.getItem('psicoAppPersona') || '');
+                const pilares = ref(localStorage.getItem('psicoAppPilares') || '');
+                const personaPlaceholderText = ref("Mães de primeira viagem (25-35 anos) enfrentando ansiedade, sobrecarga e os desafios do puerpério. Elas buscam validação, dicas práticas e um espaço seguro para falar sobre suas dificuldades sem julgamento.");
+                const pilaresPlaceholderText = ref("1. Saúde Mental no Puerpério; 2. Autocuidado para Mães; 3. Relacionamentos após o bebê; 4. Desmistificando a Terapia Parental.");
                 const tipoConteudo = ref('Carrossel');
                 const topico = ref('');
                 const isLoading = ref(false);
@@ -548,8 +550,8 @@
                 
                 // --- Ciclo de Vida e Watchers ---
                 const loadFromLocalStorage = () => {
-                    persona.value = localStorage.getItem('psicoAppPersona') || 'Mães de primeira viagem (25-35 anos) enfrentando ansiedade, sobrecarga e os desafios do puerpério. Elas buscam validação, dicas práticas e um espaço seguro para falar sobre suas dificuldades sem julgamento.';
-                    pilares.value = localStorage.getItem('psicoAppPilares') || '1. Saúde Mental no Puerpério; 2. Autocuidado para Mães; 3. Relacionamentos após o bebê; 4. Desmistificando a Terapia Parental.';
+                    // The lines for persona.value and pilares.value have been removed.
+                    // Other localStorage loading logic, if any, would remain here.
                 };
 
                 watch(apiKey, (newVal) => {
@@ -566,7 +568,7 @@
                     generateWeeklySchedule();
                 });
 
-                return { apiKey, isApiKeyInjected, persona, pilares, tipoConteudo, topico, isLoading, generatedContent, errorMessage, generateContent, copyToClipboard, copyButtonText, renderedHtml, weeklySchedule, selectDay, generateWeeklySuggestions, isGeneratingSuggestions, regenerateSuggestion, generatePillars, isGeneratingPillars };
+                return { apiKey, isApiKeyInjected, persona, pilares, personaPlaceholderText, pilaresPlaceholderText, tipoConteudo, topico, isLoading, generatedContent, errorMessage, generateContent, copyToClipboard, copyButtonText, renderedHtml, weeklySchedule, selectDay, generateWeeklySuggestions, isGeneratingSuggestions, regenerateSuggestion, generatePillars, isGeneratingPillars };
             }
         }).mount('#app');
     </script>
