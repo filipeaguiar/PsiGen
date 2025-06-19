@@ -4,11 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gerador de Conteúdo para Psicólogos</title>
-    <!-- Importa o Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Importa o Vue.js 3 -->
     <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
-    <!-- Importa o Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" xintegrity="sha512-1ycn6IcaQQ40/MKBW2W4Rhis/DbILU74C1vSrLJxCq57o941Ym01SwNsOMqvEBFlcgUa6xLiPY/NS5R+E6ztJQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <style>
         /* Estilo para um scroll suave */
@@ -87,39 +84,37 @@
     <div id="app" class="min-h-screen p-4 sm:p-6 lg:p-8">
         <div class="max-w-7xl mx-auto">
             
-            <!-- Cabeçalho -->
             <header class="text-center mb-10">
                 <h1 class="text-4xl sm:text-5xl font-bold gradient-text">Gerador de Conteúdo IA</h1>
                 <p class="mt-2 text-lg" style="color: var(--subtext0);">Para profissionais de Psicologia</p>
             </header>
 
             <main class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <!-- Coluna da Esquerda: Planejamento Estratégico -->
                 <div id="planning-module" class="lg:col-span-1 p-6 rounded-2xl shadow-lg" style="background-color: var(--base);">
                     <h2 class="text-2xl font-semibold mb-2" style="color: var(--text);">Planejamento Estratégico</h2>
                     <p class="mb-6" style="color: var(--subtext0);">Defina a base para a IA criar conteúdos alinhados.</p>
 
-                    <!-- Campo para a Chave da API (Condicional) -->
                     <div class="mb-6">
-                        <div v-if="!isApiKeyInjected">
-                             <label for="apiKey" class="block text-sm font-medium mb-1"><i class="fas fa-key mr-2" style="color: var(--yellow);"></i>Sua Chave da API do Google AI</label>
+                        <div v-if="!apiKeyFromLocalStorage"> <label for="apiKey" class="block text-sm font-medium mb-1"><i class="fas fa-key mr-2" style="color: var(--yellow);"></i>Sua Chave da API do Google AI</label>
                              <input type="password" v-model="apiKey" id="apiKey" class="w-full px-3 py-2 border rounded-md shadow-sm focus:ring-2 focus:border-transparent" style="background-color: var(--base); border-color: var(--pink); color: var(--text); --tw-ring-color: var(--pink);" placeholder="Cole sua chave da API aqui">
+                             <button @click="saveApiKey" :disabled="!apiKey" class="mt-2 w-full flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm transition-all duration-300 disabled:opacity-50" style="background: linear-gradient(to right, var(--mauve), var(--pink)); color: #fff;">
+                                <i class="fas fa-save mr-2"></i> Salvar Chave
+                            </button>
                         </div>
                         <div v-else>
                             <p class="text-sm p-2 rounded-md" style="background-color: var(--mantle); color: var(--green);"><i class="fas fa-check-circle mr-2"></i>Chave da API carregada com segurança.</p>
+                            <button @click="clearApiKey" class="mt-2 px-3 py-1 text-xs font-medium rounded-md" style="background-color: var(--red); color: #fff;">
+                                <i class="fas fa-trash-alt mr-1"></i> Remover Chave
+                            </button>
                         </div>
                     </div>
-                        <div id="apiKeyDebugDisplay" style="margin-top: 10px; padding: 10px; border: 1px solid red; background-color: #fdd;">API Key for Debug: <span id="apiKeyDebugValue">{{ apiKey }}</span></div>
-
-                    <!-- Definição da Persona -->
                     <div class="mb-6">
                         <label for="persona" class="block text-sm font-medium mb-1"><i class="fas fa-user-circle mr-2" style="color: var(--green);"></i>Defina sua Persona</label>
                         <textarea v-model="persona" id="persona" rows="4" class="w-full px-3 py-2 border rounded-md shadow-sm focus:ring-2 focus:border-transparent" style="background-color: var(--base); border-color: var(--pink); color: var(--text); --tw-ring-color: var(--pink);" :placeholder="personaPlaceholderText"></textarea>
                     </div>
 
-                    <!-- Botão Gerar Pilares -->
                     <div class="mb-6">
-                         <button @click="generatePillars" :disabled="isGeneratingPillars || !apiKey || !persona" class="w-full flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm transition-all duration-300 disabled:opacity-50" style="background: linear-gradient(to right, var(--mauve), var(--pink)); color: #fff;" :style="!isGeneratingPillars && apiKey && persona ? {':hover': { 'box-shadow': '0 0 15px ' + 'var(--mauve)' } } : {}">
+                         <button @click="generatePillars" :disabled="isGeneratingPillars || !apiKey" class="w-full flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm transition-all duration-300 disabled:opacity-50" style="background: linear-gradient(to right, var(--mauve), var(--pink)); color: #fff;" :style="!isGeneratingPillars && apiKey ? {':hover': { 'box-shadow': '0 0 15px ' + 'var(--mauve)' } } : {}">
                             <i v-if="isGeneratingPillars" class="fas fa-spinner fa-spin mr-2"></i>
                             <i v-else class="fas fa-cogs mr-2"></i>
                             <span v-if="isGeneratingPillars">Sugerindo Pilares...</span>
@@ -127,13 +122,11 @@
                         </button>
                     </div>
 
-                    <!-- Pilares de Conteúdo -->
                     <div class="mb-6">
                         <label for="pilares" class="block text-sm font-medium mb-1"><i class="fas fa-stream mr-2" style="color: var(--sapphire);"></i>Seus Pilares de Conteúdo</label>
                         <textarea v-model="pilares" id="pilares" rows="4" class="w-full px-3 py-2 border rounded-md shadow-sm focus:ring-2 focus:border-transparent" style="background-color: var(--base); border-color: var(--pink); color: var(--text); --tw-ring-color: var(--pink);" :placeholder="pilaresPlaceholderText"></textarea>
                     </div>
                     
-                    <!-- Projeção Semanal -->
                     <div>
                         <h3 class="text-lg font-semibold mb-3">Projeção Semanal de Conteúdo</h3>
                         <button @click="generateWeeklySuggestions" :disabled="isGeneratingSuggestions || !apiKey" class="w-full flex justify-center items-center px-4 py-2 mb-4 border border-transparent text-sm font-medium rounded-md shadow-sm text-white transition-all duration-300 disabled:opacity-50" style="background: linear-gradient(to right, var(--mauve), var(--pink)); color: #fff;" :style="isGeneratingSuggestions ? {} : {':hover': { 'box-shadow': '0 0 15px ' + 'var(--mauve)' } }">
@@ -163,12 +156,10 @@
                     </div>
                 </div>
 
-                <!-- Coluna Central e Direita: Geração de Conteúdo -->
                 <div id="generation-module" class="lg:col-span-2 p-6 rounded-2xl shadow-lg" style="background-color: var(--base);">
                     <h2 class="text-2xl font-semibold mb-2">Geração de Conteúdo</h2>
                     <p class="mb-6" style="color: var(--subtext0);">Escolha o formato e gere um post pronto para usar.</p>
 
-                    <!-- Linha de Geração -->
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                         <div>
                             <label for="tipoConteudo" class="block text-sm font-medium mb-1"><i class="fas fa-shapes mr-2" style="color: var(--peach);"></i>Tipo de Conteúdo</label>
@@ -187,7 +178,6 @@
                         </div>
                     </div>
                     
-                    <!-- Botão de Gerar -->
                     <button @click="generateContent" :disabled="isLoading || !apiKey" class="w-full flex justify-center items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-lg text-white transition-all duration-300 disabled:opacity-50" style="background: linear-gradient(to right, var(--mauve), var(--pink)); color: #fff;" :style="isLoading ? {} : {':hover': { 'box-shadow': '0 0 20px ' + 'var(--mauve)' } }">
                         <i v-if="isLoading" class="fas fa-spinner fa-spin mr-3"></i>
                          <i v-else class="fas fa-magic mr-2"></i>
@@ -195,13 +185,11 @@
                         <span v-else>Gerar Conteúdo</span>
                     </button>
                     
-                     <!-- Mensagem de erro -->
-                    <div v-if="errorMessage" class="mt-4 p-4 rounded-md flex items-center" style="background-color: var(--red); color: var(--base);">
+                     <div v-if="errorMessage" class="mt-4 p-4 rounded-md flex items-center" style="background-color: var(--red); color: var(--base);">
                         <i class="fas fa-exclamation-triangle mr-3"></i>
                         <p><strong>Erro:</strong> {{ errorMessage }}</p>
                     </div>
 
-                    <!-- Área de Resultado -->
                     <div v-if="generatedContent || isLoading" class="mt-8">
                         <div class="flex justify-between items-center mb-4">
                              <h3 class="text-xl font-semibold"><i class="fas fa-magic mr-2" style="color: var(--lavender);"></i>Conteúdo Gerado:</h3>
@@ -218,55 +206,17 @@
         </div>
     </div>
 
-    <!-- 
-        INSTRUÇÕES PARA DEPLOY NO GITHUB PAGES COM CHAVE DE API SECRETA:
-        
-        1. Crie um "secret" no seu repositório do GitHub:
-           - Vá em "Settings" > "Secrets and variables" > "Actions".
-           - Clique em "New repository secret".
-           - Dê o nome de `VUE_APP_GEMINI_API_KEY` e cole sua chave da API do Google AI.
-
-        2. Crie um arquivo de workflow para o GitHub Actions:
-           - No seu repositório, crie a pasta `.github/workflows`.
-           - Dentro dela, crie um arquivo chamado `deploy.yml` com o seguinte conteúdo:
-
-        name: Build and Deploy to GitHub Pages
-
-        on:
-          push:
-            branches:
-              - main # ou a branch que você usa
-
-        jobs:
-          build-and-deploy:
-            runs-on: ubuntu-latest
-            steps:
-              - name: Checkout 🛎️
-                uses: actions/checkout@v3
-
-              - name: Replace API Key Placeholder 🗝️
-                run: |
-                  sed -i "s|{{VUE_APP_GEMINI_API_KEY}}|${{ secrets.VUE_APP_GEMINI_API_KEY }}|g" index.html
-                
-              - name: Deploy 🚀
-                uses: JamesIves/github-pages-deploy-action@v4
-                with:
-                  branch: gh-pages # A branch onde será feito o deploy
-                  folder: . # A pasta raiz do seu projeto
-
-    -->
     <script type="module">
     const { createApp, ref, computed, watch, onMounted } = Vue;
     
-    // A chave da API será substituída pelo GitHub Actions durante o deploy
-    // Ela é declarada aqui para estar no escopo do módulo e ser acessível em todo o app Vue
-    const INJECTED_API_KEY = '{{VUE_APP_GEMINI_API_KEY}}'; // Renomeei para evitar confusão
+    // A constante INJECTED_API_KEY e a lógica de verificação de GitHub Pages foram removidas,
+    // pois a gestão da chave será feita exclusivamente via localStorage.
 
     createApp({
         setup() {
             // --- Estado da Aplicação ---
             const apiKey = ref('');
-            const isApiKeyInjected = ref(false);
+            const apiKeyFromLocalStorage = ref(false); // Novo estado para controlar se a chave veio do localStorage
             const persona = ref(localStorage.getItem('psicoAppPersona') || '');
             const pilares = ref(localStorage.getItem('psicoAppPilares') || '');
             const personaPlaceholderText = ref("Mães de primeira viagem (25-35 anos) enfrentando ansiedade, sobrecarga e os desafios do puerpério. Elas buscam validação, dicas práticas e um espaço seguro para falar sobre suas dificuldades sem julgamento.");
@@ -283,50 +233,28 @@
 
             // --- Funções de Inicialização e API ---
             const initializeApiKey = () => {
-                const placeholderStringLiteral = '{{VUE_APP_GEMINI_API_KEY}}'; 
-                // USE DIRETAMENTE A CONSTANTE DECLARADA FORA DO SETUP
-                const actualInjectedValue = INJECTED_API_KEY; 
-console.log("DEBUG: actualInjectedValue:", actualInjectedValue);
-    console.log("DEBUG: placeholderStringLiteral:", placeholderStringLiteral);
-    console.log("DEBUG: isRunningOnGitHubPages:", window.location.hostname.endsWith('github.io'));
-                // Verifica se está rodando em um domínio de GitHub Pages padrão
-                const isRunningOnGitHubPages = window.location.hostname.endsWith('github.io');
-
-                if (isRunningOnGitHubPages) {
-                    // No GitHub Pages, a chave é esperada para ser injetada pelo workflow.
-                    // Se o valor ainda for o placeholder ou estiver vazio, significa que não foi injetada corretamente.
-                    if (actualInjectedValue === placeholderStringLiteral || actualInjectedValue === '') {
-                        apiKey.value = ''; // Chave não injetada ou vazia
-                    } else {
-                        apiKey.value = actualInjectedValue; // Chave injetada com sucesso
-                    }
-                    isApiKeyInjected.value = !!apiKey.value; // Oculta o input se a chave estiver presente
+                const storedApiKey = localStorage.getItem('geminiApiKey');
+                if (storedApiKey) {
+                    apiKey.value = storedApiKey;
+                    apiKeyFromLocalStorage.value = true;
                 } else {
-                    // Desenvolvimento local ou outros ambientes: tenta pegar do localStorage
-                    if (actualInjectedValue && actualInjectedValue !== placeholderStringLiteral) {
-                        // Se por algum motivo o placeholder já veio com a chave (ex: teste local direto no arquivo)
-                        apiKey.value = actualInjectedValue;
-                        isApiKeyInjected.value = true;
-                    } else {
-                        // Comportamento padrão de dev local: tenta do localStorage
-                        apiKey.value = localStorage.getItem('geminiApiKey') || '';
-                        isApiKeyInjected.value = !!apiKey.value; // Mostra o input se não estiver no localStorage ou estiver vazio
-                    }
+                    apiKey.value = ''; // Garante que esteja vazia se não houver no localStorage
+                    apiKeyFromLocalStorage.value = false;
                 }
-                
-                // Debugging Display: Atualiza a div de depuração no HTML
-                const displayValue = document.getElementById('apiKeyDebugValue');
-                if (displayValue) { // Garante que o elemento existe antes de tentar manipulá-lo
-                    if (apiKey.value && apiKey.value !== placeholderStringLiteral) {
-                        displayValue.textContent = apiKey.value.substring(0, 5) + '...'; // Mostra apenas o início da chave para segurança
-                    } else if (isApiKeyInjected.value) {
-                        displayValue.textContent = 'Chave injetada com sucesso (valor oculto)';
-                    } else {
-                        displayValue.textContent = 'Não injetada ou vazia (verificar input manual)';
-                    }
+            };
+
+            const saveApiKey = () => {
+                if (apiKey.value) {
+                    localStorage.setItem('geminiApiKey', apiKey.value);
+                    apiKeyFromLocalStorage.value = true; // Marca como chave carregada do localStorage
                 }
-console.log("DEBUG: apiKey.value after init:", apiKey.value);
-    console.log("DEBUG: isApiKeyInjected after init:", isApiKeyInjected.value);
+            };
+
+            const clearApiKey = () => {
+                localStorage.removeItem('geminiApiKey');
+                apiKey.value = '';
+                apiKeyFromLocalStorage.value = false;
+                errorMessage.value = 'Chave da API removida. Insira uma nova chave para continuar.';
             };
             
             // --- Funções para Interação com a API (Stubs) ---
@@ -537,15 +465,7 @@ A culpa materna é um sentimento comum e complexo, que muitas mães experimentam
             // --- Life Cycle Hooks ---
             onMounted(() => {
                 initializeApiKey(); // Inicializa a chave da API quando o componente é montado
-                // Adiciona um listener para salvar a API Key no localStorage ao ser digitada
-                watch(apiKey, (newValue) => {
-                    localStorage.setItem('geminiApiKey', newValue);
-                    // Atualiza o display de debug em tempo real, se a chave for digitada manualmente
-                    const displayValue = document.getElementById('apiKeyDebugValue');
-                    if (displayValue && !isApiKeyInjected.value) { // Só atualiza se não for injetada (manual)
-                         displayValue.textContent = newValue ? newValue.substring(0, 5) + '...' : 'Vazia';
-                    }
-                });
+                // Os watchers para persona e pilares continuam, pois dependem do localStorage
                 watch(persona, (newValue) => {
                     localStorage.setItem('psicoAppPersona', newValue);
                 });
@@ -557,7 +477,7 @@ A culpa materna é um sentimento comum e complexo, que muitas mães experimentam
             // --- Retornar estado e funções para o template ---
             return {
                 apiKey,
-                isApiKeyInjected,
+                apiKeyFromLocalStorage, // Alterado para apiKeyFromLocalStorage
                 persona,
                 pilares,
                 tipoConteudo,
@@ -577,7 +497,9 @@ A culpa materna é um sentimento comum e complexo, que muitas mães experimentam
                 selectDay,
                 generateContent,
                 copyToClipboard,
-                renderedHtml
+                renderedHtml,
+                saveApiKey, // Nova função para salvar
+                clearApiKey // Nova função para remover
             };
         }
     }).mount('#app');
