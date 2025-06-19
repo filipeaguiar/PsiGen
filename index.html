@@ -110,6 +110,7 @@
                             <p class="text-sm p-2 rounded-md" style="background-color: var(--mantle); color: var(--green);"><i class="fas fa-check-circle mr-2"></i>Chave da API carregada com segurança.</p>
                         </div>
                     </div>
+                    <div id="apiKeyDebugDisplay" style="margin-top: 10px; padding: 10px; border: 1px solid red; background-color: #fdd;">API Key for Debug: <span id="apiKeyDebugValue"></span></div>
 
                     <!-- Definição da Persona -->
                     <div class="mb-6">
@@ -312,6 +313,7 @@
                             isApiKeyInjected.value = !!apiKey.value;
                         }
                     }
+                    document.getElementById('apiKeyDebugValue').textContent = apiKey.value || 'Not set or empty';
                 };
                 
                 // --- Funções de Planejamento ---
