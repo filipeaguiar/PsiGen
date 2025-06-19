@@ -1,24 +1,41 @@
-
 name: Build and Deploy to GitHub Pages
-        on:
-          push:
-            branches:
-              - main
 
-        jobs:
-          build-and-deploy:
-            runs-on: ubuntu-latest
-            steps:
-              - name: Checkout
-                uses: actions/checkout@v3
+on:
+  push:
+    branches: ['main']
+  workflow_dispatch:
 
-              - name: Replace API Key Placeholder
-                run: |
-                  sed -i "s|{{VUE_APP_GEMINI_API_KEY}}|${{ secrets.VUE_APP_GEMINI_API_KEY }}|g" index.html
-                
-              - name: Deploy
-                uses: JamesIves/github-pages-deploy-action@v4
-                with:
-                  branch: gh-pages
-                  folder: .
+permissions:
+  contents: read
+  pages: write
+  id-token: write
 
+concurrency:
+  group: 'pages'
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Replace API Key Placeholder
+        run: |
+          sed -i "s|{{VUE_APP_GEMINI_API_KEY}}|${{ secrets.VUE_APP_GEMINI_API_KEY }}|g" index.html
+        
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: './' 
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
