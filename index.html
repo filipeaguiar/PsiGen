@@ -280,15 +280,35 @@
 
                 // --- Funções de Inicialização e API ---
                 const initializeApiKey = () => {
-                    const envKey = VUE_APP_GEMINI_API_KEY_PLACEHOLDER;
-                    if (envKey && !envKey.startsWith('{{')) {
-                        // A chave foi injetada pelo GitHub Actions
-                        apiKey.value = envKey;
+                    const placeholderString = '{{VUE_APP_GEMINI_API_KEY}}';
+                    const currentKeyValue = VUE_APP_GEMINI_API_KEY_PLACEHOLDER; // This is replaced by sed
+
+                    // Check if running on a typical GitHub Pages domain.
+                    // Users with custom domains might need to adjust this condition,
+                    // for example: window.location.hostname === 'yourcustomdomain.com' || window.location.hostname.endsWith('github.io')
+                    const isRunningOnGitHubPages = window.location.hostname.endsWith('github.io');
+
+                    if (isRunningOnGitHubPages) {
+                        // On GitHub Pages, the key is expected to be injected by the workflow.
+                        // The input field should not appear.
                         isApiKeyInjected.value = true;
+                        apiKey.value = currentKeyValue;
+                        // If currentKeyValue is empty or still the placeholder due to an Action error,
+                        // API calls might fail, which is a separate issue.
+                        // The UI for API key input will be hidden as requested.
                     } else {
-                        // Busca a chave no localStorage para desenvolvimento local
-                        apiKey.value = localStorage.getItem('geminiApiKey') || '';
-                        isApiKeyInjected.value = false;
+                        // Local development or other environments
+                        if (currentKeyValue && currentKeyValue !== placeholderString) {
+                            // Key was somehow set directly in the placeholder variable
+                            // (e.g. manual edit for local test, or a non-GHA deployment that does replacement)
+                            apiKey.value = currentKeyValue;
+                            isApiKeyInjected.value = true; // Key is present, hide input
+                        } else {
+                            // Standard local development: key not in placeholder, try localStorage
+                            apiKey.value = localStorage.getItem('geminiApiKey') || '';
+                            // Show input if not in localStorage, or if it's empty from localStorage
+                            isApiKeyInjected.value = !!apiKey.value;
+                        }
                     }
                 };
                 
