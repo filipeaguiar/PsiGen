@@ -283,7 +283,7 @@
 
                 // --- Funções de Inicialização e API ---
                 const initializeApiKey = () => {
-                    const placeholderString = '{{VUE_APP_GEMINI_API_KEY}}';
+                    const placeholderStringLiteral = '{{VUE_APP_GEMINI_API_KEY}}';
                     const currentKeyValue = VUE_APP_GEMINI_API_KEY_PLACEHOLDER; // This is replaced by sed
 
                     // Check if running on a typical GitHub Pages domain.
@@ -293,27 +293,39 @@
 
                     if (isRunningOnGitHubPages) {
                         // On GitHub Pages, the key is expected to be injected by the workflow.
-                        // The input field should not appear.
-                        isApiKeyInjected.value = true;
-                        apiKey.value = currentKeyValue;
-                        // If currentKeyValue is empty or still the placeholder due to an Action error,
-                        // API calls might fail, which is a separate issue.
-                        // The UI for API key input will be hidden as requested.
+                        if (currentKeyValue === placeholderStringLiteral || currentKeyValue === '') {
+                            apiKey.value = ''; // Key not injected or empty
+                        } else {
+                            apiKey.value = currentKeyValue;
+                        }
+                        isApiKeyInjected.value = !!apiKey.value; // Hide input if key is present
                     } else {
                         // Local development or other environments
-                        if (currentKeyValue && currentKeyValue !== placeholderString) {
-                            // Key was somehow set directly in the placeholder variable
-                            // (e.g. manual edit for local test, or a non-GHA deployment that does replacement)
+                        if (currentKeyValue && currentKeyValue !== placeholderStringLiteral) {
+                            // Key was somehow set directly in the placeholder variable for local testing
                             apiKey.value = currentKeyValue;
                             isApiKeyInjected.value = true; // Key is present, hide input
                         } else {
                             // Standard local development: key not in placeholder, try localStorage
                             apiKey.value = localStorage.getItem('geminiApiKey') || '';
-                            // Show input if not in localStorage, or if it's empty from localStorage
-                            isApiKeyInjected.value = !!apiKey.value;
+                            isApiKeyInjected.value = !!apiKey.value; // Show input if not in localStorage, or if it's empty
                         }
                     }
-                    document.getElementById('apiKeyDebugValue').textContent = apiKey.value || 'Not set or empty';
+                    const displayValue = document.getElementById('apiKeyDebugValue');
+                    if (apiKey.value && apiKey.value !== '{{VUE_APP_GEMINI_API_KEY}}') {
+                        displayValue.textContent = apiKey.value;
+                    } else if (isApiKeyInjected.value && (!apiKey.value || apiKey.value === '{{VUE_APP_GEMINI_API_KEY}}')) {
+                        // This case implies it was meant to be injected but the key is missing or is still the placeholder
+                        displayValue.textContent = 'Error: API Key was meant to be injected by deployment, but is missing or invalid.';
+                        displayValue.style.color = 'red';
+                    } else if (!apiKey.value) {
+                        displayValue.textContent = 'API Key not set (checked localStorage for local development).';
+                        displayValue.style.color = 'orange';
+                    } else {
+                        // Fallback, though ideally covered by above cases
+                        displayValue.textContent = 'API Key status unclear, placeholder might still be present: ' + apiKey.value;
+                        displayValue.style.color = 'purple';
+                    }
                 };
                 
                 // --- Funções de Planejamento ---
