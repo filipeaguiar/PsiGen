@@ -26,8 +26,8 @@ jobs:
 
       - name: Replace API Key Placeholder
         run: |
-          sed -i "s|{{VUE_APP_GEMINI_API_KEY}}|${{ secrets.VUE_APP_GEMINI_API_KEY }}|g" index.html
-        
+          sed -i "s@{{VUE_APP_GEMINI_API_KEY}}@${{ secrets.VUE_APP_GEMINI_API_KEY }}@g" index.html        
+
       - name: Setup Pages
         uses: actions/configure-pages@v4
 
