@@ -259,8 +259,8 @@
     const { createApp, ref, computed, watch, onMounted } = Vue;
     
     // A chave da API será substituída pelo GitHub Actions durante o deploy
-    // Ela é declarada aqui para estar no escopo do módulo e ser acessível dentro do createApp
-    const API_KEY_PLACEHOLDER_VALUE = '{{VUE_APP_GEMINI_API_KEY}}'; 
+    // Ela é declarada aqui para estar no escopo do módulo e ser acessível em todo o app Vue
+    const INJECTED_API_KEY = '{{VUE_APP_GEMINI_API_KEY}}'; // Renomeei para evitar confusão
 
     createApp({
         setup() {
@@ -283,8 +283,9 @@
 
             // --- Funções de Inicialização e API ---
             const initializeApiKey = () => {
-                const placeholderStringLiteral = '{{VUE_APP_GEMINI_API_KEY}}'; // Este é o literal que o sed procura
-                const currentKeyValue = API_KEY_PLACEHOLDER_VALUE; // Este é o valor *após* a substituição do sed (ou o placeholder se não substituiu)
+                const placeholderStringLiteral = '{{VUE_APP_GEMINI_API_KEY}}'; 
+                // USE DIRETAMENTE A CONSTANTE DECLARADA FORA DO SETUP
+                const actualInjectedValue = INJECTED_API_KEY; 
 
                 // Verifica se está rodando em um domínio de GitHub Pages padrão
                 const isRunningOnGitHubPages = window.location.hostname.endsWith('github.io');
@@ -292,17 +293,17 @@
                 if (isRunningOnGitHubPages) {
                     // No GitHub Pages, a chave é esperada para ser injetada pelo workflow.
                     // Se o valor ainda for o placeholder ou estiver vazio, significa que não foi injetada corretamente.
-                    if (currentKeyValue === placeholderStringLiteral || currentKeyValue === '') {
+                    if (actualInjectedValue === placeholderStringLiteral || actualInjectedValue === '') {
                         apiKey.value = ''; // Chave não injetada ou vazia
                     } else {
-                        apiKey.value = currentKeyValue; // Chave injetada com sucesso
+                        apiKey.value = actualInjectedValue; // Chave injetada com sucesso
                     }
                     isApiKeyInjected.value = !!apiKey.value; // Oculta o input se a chave estiver presente
                 } else {
                     // Desenvolvimento local ou outros ambientes: tenta pegar do localStorage
-                    if (currentKeyValue && currentKeyValue !== placeholderStringLiteral) {
+                    if (actualInjectedValue && actualInjectedValue !== placeholderStringLiteral) {
                         // Se por algum motivo o placeholder já veio com a chave (ex: teste local direto no arquivo)
-                        apiKey.value = currentKeyValue;
+                        apiKey.value = actualInjectedValue;
                         isApiKeyInjected.value = true;
                     } else {
                         // Comportamento padrão de dev local: tenta do localStorage
