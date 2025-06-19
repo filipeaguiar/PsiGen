@@ -114,7 +114,7 @@
                     <!-- Definição da Persona -->
                     <div class="mb-6">
                         <label for="persona" class="block text-sm font-medium mb-1"><i class="fas fa-user-circle mr-2" style="color: var(--green);"></i>Defina sua Persona</label>
-                        <textarea v-model="persona" id="persona" rows="4" class="w-full px-3 py-2 border rounded-md shadow-sm focus:ring-2 focus:border-transparent" style="background-color: var(--base); border-color: var(--pink); color: var(--text); --tw-ring-color: var(--pink);" placeholder="Ex: Mães de primeira viagem..."></textarea>
+                        <textarea v-model="persona" id="persona" rows="4" class="w-full px-3 py-2 border rounded-md shadow-sm focus:ring-2 focus:border-transparent" style="background-color: var(--base); border-color: var(--pink); color: var(--text); --tw-ring-color: var(--pink);" :placeholder="personaPlaceholderText"></textarea>
                     </div>
 
                     <!-- Botão Gerar Pilares -->
@@ -130,7 +130,7 @@
                     <!-- Pilares de Conteúdo -->
                     <div class="mb-6">
                         <label for="pilares" class="block text-sm font-medium mb-1"><i class="fas fa-stream mr-2" style="color: var(--sapphire);"></i>Seus Pilares de Conteúdo</label>
-                        <textarea v-model="pilares" id="pilares" rows="4" class="w-full px-3 py-2 border rounded-md shadow-sm focus:ring-2 focus:border-transparent" style="background-color: var(--base); border-color: var(--pink); color: var(--text); --tw-ring-color: var(--pink);" placeholder="Ex: 1. Ansiedade e Estresse..."></textarea>
+                        <textarea v-model="pilares" id="pilares" rows="4" class="w-full px-3 py-2 border rounded-md shadow-sm focus:ring-2 focus:border-transparent" style="background-color: var(--base); border-color: var(--pink); color: var(--text); --tw-ring-color: var(--pink);" :placeholder="pilaresPlaceholderText"></textarea>
                     </div>
                     
                     <!-- Projeção Semanal -->
@@ -266,8 +266,10 @@
                 // --- Estado da Aplicação ---
                 const apiKey = ref('');
                 const isApiKeyInjected = ref(false);
-                const persona = ref('');
-                const pilares = ref('');
+                const persona = ref(localStorage.getItem('psicoAppPersona') || '');
+                const pilares = ref(localStorage.getItem('psicoAppPilares') || '');
+                const personaPlaceholderText = ref("Mães de primeira viagem (25-35 anos) enfrentando ansiedade, sobrecarga e os desafios do puerpério. Elas buscam validação, dicas práticas e um espaço seguro para falar sobre suas dificuldades sem julgamento.");
+                const pilaresPlaceholderText = ref("1. Saúde Mental no Puerpério; 2. Autocuidado para Mães; 3. Relacionamentos após o bebê; 4. Desmistificando a Terapia Parental.");
                 const tipoConteudo = ref('Carrossel');
                 const topico = ref('');
                 const isLoading = ref(false);
@@ -280,15 +282,35 @@
 
                 // --- Funções de Inicialização e API ---
                 const initializeApiKey = () => {
-                    const envKey = VUE_APP_GEMINI_API_KEY_PLACEHOLDER;
-                    if (envKey && !envKey.startsWith('{{')) {
-                        // A chave foi injetada pelo GitHub Actions
-                        apiKey.value = envKey;
+                    const placeholderString = '{{VUE_APP_GEMINI_API_KEY}}';
+                    const currentKeyValue = VUE_APP_GEMINI_API_KEY_PLACEHOLDER; // This is replaced by sed
+
+                    // Check if running on a typical GitHub Pages domain.
+                    // Users with custom domains might need to adjust this condition,
+                    // for example: window.location.hostname === 'yourcustomdomain.com' || window.location.hostname.endsWith('github.io')
+                    const isRunningOnGitHubPages = window.location.hostname.endsWith('github.io');
+
+                    if (isRunningOnGitHubPages) {
+                        // On GitHub Pages, the key is expected to be injected by the workflow.
+                        // The input field should not appear.
                         isApiKeyInjected.value = true;
+                        apiKey.value = currentKeyValue;
+                        // If currentKeyValue is empty or still the placeholder due to an Action error,
+                        // API calls might fail, which is a separate issue.
+                        // The UI for API key input will be hidden as requested.
                     } else {
-                        // Busca a chave no localStorage para desenvolvimento local
-                        apiKey.value = localStorage.getItem('geminiApiKey') || '';
-                        isApiKeyInjected.value = false;
+                        // Local development or other environments
+                        if (currentKeyValue && currentKeyValue !== placeholderString) {
+                            // Key was somehow set directly in the placeholder variable
+                            // (e.g. manual edit for local test, or a non-GHA deployment that does replacement)
+                            apiKey.value = currentKeyValue;
+                            isApiKeyInjected.value = true; // Key is present, hide input
+                        } else {
+                            // Standard local development: key not in placeholder, try localStorage
+                            apiKey.value = localStorage.getItem('geminiApiKey') || '';
+                            // Show input if not in localStorage, or if it's empty from localStorage
+                            isApiKeyInjected.value = !!apiKey.value;
+                        }
                     }
                 };
                 
@@ -528,8 +550,8 @@
                 
                 // --- Ciclo de Vida e Watchers ---
                 const loadFromLocalStorage = () => {
-                    persona.value = localStorage.getItem('psicoAppPersona') || 'Mães de primeira viagem (25-35 anos) enfrentando ansiedade, sobrecarga e os desafios do puerpério. Elas buscam validação, dicas práticas e um espaço seguro para falar sobre suas dificuldades sem julgamento.';
-                    pilares.value = localStorage.getItem('psicoAppPilares') || '1. Saúde Mental no Puerpério; 2. Autocuidado para Mães; 3. Relacionamentos após o bebê; 4. Desmistificando a Terapia Parental.';
+                    // The lines for persona.value and pilares.value have been removed.
+                    // Other localStorage loading logic, if any, would remain here.
                 };
 
                 watch(apiKey, (newVal) => {
@@ -546,7 +568,7 @@
                     generateWeeklySchedule();
                 });
 
-                return { apiKey, isApiKeyInjected, persona, pilares, tipoConteudo, topico, isLoading, generatedContent, errorMessage, generateContent, copyToClipboard, copyButtonText, renderedHtml, weeklySchedule, selectDay, generateWeeklySuggestions, isGeneratingSuggestions, regenerateSuggestion, generatePillars, isGeneratingPillars };
+                return { apiKey, isApiKeyInjected, persona, pilares, personaPlaceholderText, pilaresPlaceholderText, tipoConteudo, topico, isLoading, generatedContent, errorMessage, generateContent, copyToClipboard, copyButtonText, renderedHtml, weeklySchedule, selectDay, generateWeeklySuggestions, isGeneratingSuggestions, regenerateSuggestion, generatePillars, isGeneratingPillars };
             }
         }).mount('#app');
     </script>
