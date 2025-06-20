@@ -90,12 +90,14 @@
             </header>
 
             <main class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
                 <div id="planning-module" class="lg:col-span-1 p-6 rounded-2xl shadow-lg" style="background-color: var(--base);">
                     <h2 class="text-2xl font-semibold mb-2" style="color: var(--text);">Planejamento Estratégico</h2>
                     <p class="mb-6" style="color: var(--subtext0);">Defina a base para a IA criar conteúdos alinhados.</p>
 
                     <div class="mb-6">
-                        <div v-if="!apiKeyFromLocalStorage"> <label for="apiKey" class="block text-sm font-medium mb-1"><i class="fas fa-key mr-2" style="color: var(--yellow);"></i>Sua Chave da API do Google AI</label>
+                        <div v-if="!apiKeyFromLocalStorage">
+                             <label for="apiKey" class="block text-sm font-medium mb-1"><i class="fas fa-key mr-2" style="color: var(--yellow);"></i>Sua Chave da API do Google AI</label>
                              <input type="password" v-model="apiKey" id="apiKey" class="w-full px-3 py-2 border rounded-md shadow-sm focus:ring-2 focus:border-transparent" style="background-color: var(--base); border-color: var(--pink); color: var(--text); --tw-ring-color: var(--pink);" placeholder="Cole sua chave da API aqui">
                              <button @click="saveApiKey" :disabled="!apiKey" class="mt-2 w-full flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm transition-all duration-300 disabled:opacity-50" style="background: linear-gradient(to right, var(--mauve), var(--pink)); color: #fff;">
                                 <i class="fas fa-save mr-2"></i> Salvar Chave
@@ -108,401 +110,249 @@
                             </button>
                         </div>
                     </div>
+
                     <div class="mb-6">
                         <label for="persona" class="block text-sm font-medium mb-1"><i class="fas fa-user-circle mr-2" style="color: var(--green);"></i>Defina sua Persona</label>
-                        <textarea v-model="persona" id="persona" rows="4" class="w-full px-3 py-2 border rounded-md shadow-sm focus:ring-2 focus:border-transparent" style="background-color: var(--base); border-color: var(--pink); color: var(--text); --tw-ring-color: var(--pink);" :placeholder="personaPlaceholderText"></textarea>
-                    </div>
-
-                    <div class="mb-6">
-                         <button @click="generatePillars" :disabled="isGeneratingPillars || !apiKey" class="w-full flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm transition-all duration-300 disabled:opacity-50" style="background: linear-gradient(to right, var(--mauve), var(--pink)); color: #fff;" :style="!isGeneratingPillars && apiKey ? {':hover': { 'box-shadow': '0 0 15px ' + 'var(--mauve)' } } : {}">
-                            <i v-if="isGeneratingPillars" class="fas fa-spinner fa-spin mr-2"></i>
-                            <i v-else class="fas fa-cogs mr-2"></i>
-                            <span v-if="isGeneratingPillars">Sugerindo Pilares...</span>
-                            <span v-else>Gerar Sugestões de Pilares</span>
-                        </button>
-                    </div>
-
-                    <div class="mb-6">
-                        <label for="pilares" class="block text-sm font-medium mb-1"><i class="fas fa-stream mr-2" style="color: var(--sapphire);"></i>Seus Pilares de Conteúdo</label>
-                        <textarea v-model="pilares" id="pilares" rows="4" class="w-full px-3 py-2 border rounded-md shadow-sm focus:ring-2 focus:border-transparent" style="background-color: var(--base); border-color: var(--pink); color: var(--text); --tw-ring-color: var(--pink);" :placeholder="pilaresPlaceholderText"></textarea>
-                    </div>
-                    
-                    <div>
-                        <h3 class="text-lg font-semibold mb-3">Projeção Semanal de Conteúdo</h3>
-                        <button @click="generateWeeklySuggestions" :disabled="isGeneratingSuggestions || !apiKey" class="w-full flex justify-center items-center px-4 py-2 mb-4 border border-transparent text-sm font-medium rounded-md shadow-sm text-white transition-all duration-300 disabled:opacity-50" style="background: linear-gradient(to right, var(--mauve), var(--pink)); color: #fff;" :style="isGeneratingSuggestions ? {} : {':hover': { 'box-shadow': '0 0 15px ' + 'var(--mauve)' } }">
-                            <i v-if="isGeneratingSuggestions" class="fas fa-spinner fa-spin mr-2"></i>
-                             <i v-else class="fas fa-calendar-alt mr-2"></i>
-                            <span v-if="isGeneratingSuggestions">Gerando Ideias...</span>
-                            <span v-else>Gerar Ideias para a Semana</span>
-                        </button>
-                        <div class="space-y-3">
-                            <div v-for="(day, index) in weeklySchedule" :key="index" class="p-3 rounded-lg border" style="background-color: var(--mantle); border-color: var(--surface0);">
-                                <div class="flex items-center justify-between">
-                                    <div>
-                                        <p class="font-semibold">{{ day.dayName }} <span class="font-normal" style="color: var(--subtext0);">- {{ day.date }}</span></p>
-                                        <p class="text-sm" style="color: var(--mauve);">{{ day.format }}</p>
-                                    </div>
-                                    <div class="flex items-center">
-                                        <button @click="regenerateSuggestion(day, index)" :disabled="day.isRegenerating || !apiKey" class="p-1.5 rounded-full hover:bg-opacity-20 disabled:opacity-50 disabled:cursor-not-allowed" style="background-color: transparent; color: var(--mauve);">
-                                            <i v-if="day.isRegenerating" class="fas fa-spinner fa-spin h-4 w-4"></i>
-                                            <i v-else class="fas fa-sync-alt h-4 w-4"></i>
-                                        </button>
-                                        <button @click="selectDay(day)" class="ml-2 px-3 py-1 text-xs font-medium rounded-full" style="color: #fff; background-color: var(--pink);">Selecionar</button>
-                                    </div>
-                                </div>
-                                <p v-if="day.suggestion" class="suggestion-text mt-2">{{ day.suggestion }}</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="generation-module" class="lg:col-span-2 p-6 rounded-2xl shadow-lg" style="background-color: var(--base);">
-                    <h2 class="text-2xl font-semibold mb-2">Geração de Conteúdo</h2>
-                    <p class="mb-6" style="color: var(--subtext0);">Escolha o formato e gere um post pronto para usar.</p>
-
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                        <div>
-                            <label for="tipoConteudo" class="block text-sm font-medium mb-1"><i class="fas fa-shapes mr-2" style="color: var(--peach);"></i>Tipo de Conteúdo</label>
-                            <select v-model="tipoConteudo" id="tipoConteudo" class="w-full px-3 py-2 border rounded-md shadow-sm focus:ring-2 focus:border-transparent" style="background-color: var(--base); border-color: var(--pink); color: var(--text); --tw-ring-color: var(--pink);">
-                                <option value="Reel">Reel (Roteiro curto)</option>
-                                <option value="Carrossel">Carrossel (Estrutura com 5 slides)</option>
-                                <option value="Legenda Longa">Post com Legenda Longa</option>
-                                <option value="Story Interativo">Story Interativo</option>
-                                <option value="Live">Live (Ideia e Roteiro)</option>
-                            </select>
-                        </div>
-
-                        <div class="md:col-span-2">
-                            <label for="topico" class="block text-sm font-medium mb-1"><i class="fas fa-bullseye mr-2" style="color: var(--red);"></i>Tópico Específico (Opcional)</label>
-                            <input type="text" v-model="topico" id="topico" class="w-full px-3 py-2 border rounded-md shadow-sm focus:ring-2 focus:border-transparent" style="background-color: var(--base); border-color: var(--pink); color: var(--text); --tw-ring-color: var(--pink);" placeholder="Ex: Como lidar com a culpa materna.">
-                        </div>
-                    </div>
-                    
-                    <button @click="generateContent" :disabled="isLoading || !apiKey" class="w-full flex justify-center items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-lg text-white transition-all duration-300 disabled:opacity-50" style="background: linear-gradient(to right, var(--mauve), var(--pink)); color: #fff;" :style="isLoading ? {} : {':hover': { 'box-shadow': '0 0 20px ' + 'var(--mauve)' } }">
-                        <i v-if="isLoading" class="fas fa-spinner fa-spin mr-3"></i>
-                         <i v-else class="fas fa-magic mr-2"></i>
-                        <span v-if="isLoading">Gerando...</span>
-                        <span v-else>Gerar Conteúdo</span>
-                    </button>
-                    
-                     <div v-if="errorMessage" class="mt-4 p-4 rounded-md flex items-center" style="background-color: var(--red); color: var(--base);">
-                        <i class="fas fa-exclamation-triangle mr-3"></i>
-                        <p><strong>Erro:</strong> {{ errorMessage }}</p>
-                    </div>
-
-                    <div v-if="generatedContent || isLoading" class="mt-8">
-                        <div class="flex justify-between items-center mb-4">
-                             <h3 class="text-xl font-semibold"><i class="fas fa-magic mr-2" style="color: var(--lavender);"></i>Conteúdo Gerado:</h3>
-                             <button v-if="generatedContent" @click="copyToClipboard" class="px-4 py-2 text-sm font-medium rounded-md" style="color: #fff; background-color: var(--lavender);">
-                                <i class="fas fa-clipboard mr-2"></i>
-                                {{ copyButtonText }}
-                            </button>
-                        </div>
-                        <div class="p-4 rounded-lg prose max-w-none min-h-[200px]" style="background-color: var(--mantle); border: 1px dashed var(--pink);" v-html="renderedHtml">
-                        </div>
-                    </div>
-                </div>
-            </main>
-        </div>
-    </div>
-
-    <script type="module">
-    const { createApp, ref, computed, watch, onMounted } = Vue;
-    
-    // A constante INJECTED_API_KEY e a lógica de verificação de GitHub Pages foram removidas,
-    // pois a gestão da chave será feita exclusivamente via localStorage.
-
-    createApp({
-        setup() {
-            // --- Estado da Aplicação ---
-            const apiKey = ref('');
-            const apiKeyFromLocalStorage = ref(false); // Novo estado para controlar se a chave veio do localStorage
-            const persona = ref(localStorage.getItem('psicoAppPersona') || '');
-            const pilares = ref(localStorage.getItem('psicoAppPilares') || '');
-            const personaPlaceholderText = ref("Mães de primeira viagem (25-35 anos) enfrentando ansiedade, sobrecarga e os desafios do puerpério. Elas buscam validação, dicas práticas e um espaço seguro para falar sobre suas dificuldades sem julgamento.");
-            const pilaresPlaceholderText = ref("1. Saúde Mental no Puerpério; 2. Autocuidado para Mães; 3. Relacionamentos após o bebê; 4. Desmistificando a Terapia Parental.");
-            const tipoConteudo = ref('Carrossel');
-            const topico = ref('');
-            const isLoading = ref(false);
-            const isGeneratingPillars = ref(false);
-            const isGeneratingSuggestions = ref(false);
-            const generatedContent = ref('');
-            const errorMessage = ref('');
-            const copyButtonText = ref('Copiar');
-            const weeklySchedule = ref([]);
-
-            // --- Funções de Inicialização e API ---
-            const initializeApiKey = () => {
-                const storedApiKey = localStorage.getItem('geminiApiKey');
-                if (storedApiKey) {
-                    apiKey.value = storedApiKey;
-                    apiKeyFromLocalStorage.value = true;
-                } else {
-                    apiKey.value = ''; // Garante que esteja vazia se não houver no localStorage
-                    apiKeyFromLocalStorage.value = false;
-                }
-            };
-
-            const saveApiKey = () => {
-                if (apiKey.value) {
-                    localStorage.setItem('geminiApiKey', apiKey.value);
-                    apiKeyFromLocalStorage.value = true; // Marca como chave carregada do localStorage
-                }
-            };
-
-            const clearApiKey = () => {
-                localStorage.removeItem('geminiApiKey');
-                apiKey.value = '';
-                apiKeyFromLocalStorage.value = false;
-                errorMessage.value = 'Chave da API removida. Insira uma nova chave para continuar.';
-            };
-            
-            // --- Funções para Interação com a API (Stubs) ---
-            // Você precisará implementar a lógica real de chamada à API aqui
-            const generatePillars = async () => {
-                errorMessage.value = '';
-                if (!apiKey.value || !persona.value) {
-                    errorMessage.value = 'Preencha a Chave da API e a Persona para gerar os pilares.';
-                    return;
-                }
-                isGeneratingPillars.value = true;
-                try {
-                    // Exemplo de como a chamada à API seria
-                    // const response = await fetch('SUA_URL_API_GEMINI', {
-                    //     method: 'POST',
-                    //     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey.value}` },
-                    //     body: JSON.stringify({ prompt: `Gere pilares de conteúdo para a persona: ${persona.value}` })
-                    // });
-                    // const data = await response.json();
-                    // pilares.value = data.generatedPillars; // Supondo que a API retorne algo assim
-                    
-                    // Simulação para teste:
-                    await new Promise(resolve => setTimeout(resolve, 2000));
-                    pilares.value = "1. Bem-estar Emocional Materno; 2. Desafios da Paternidade Moderna; 3. Equilíbrio Vida-Pós-Parto; 4. Saúde Mental Familiar.";
-                } catch (error) {
-                    console.error('Erro ao gerar pilares:', error);
-                    errorMessage.value = 'Falha ao gerar pilares. Verifique sua chave da API ou tente novamente.';
-                } finally {
-                    isGeneratingPillars.value = false;
-                }
-            };
-
-            const generateWeeklySuggestions = async () => {
-                errorMessage.value = '';
-                 if (!apiKey.value) {
-                    errorMessage.value = 'Preencha a Chave da API para gerar sugestões semanais.';
-                    return;
-                }
-                isGeneratingSuggestions.value = true;
-                try {
-                    const daysOfWeek = ['Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado', 'Domingo'];
-                    const formats = ['Reel', 'Carrossel', 'Legenda Longa', 'Story Interativo'];
-                    const suggestions = [];
-
-                    for (let i = 0; i < 7; i++) {
-                        const date = new Date();
-                        date.setDate(date.getDate() + i); // Adiciona 'i' dias à data atual
-                        const dayName = new Intl.DateTimeFormat('pt-BR', { weekday: 'long' }).format(date);
-                        const formattedDate = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit' }).format(date);
-                        
-                        const randomFormat = formats[Math.floor(Math.random() * formats.length)];
-                        
-                        // Chamada simulada à API para cada sugestão
-                        // const prompt = `Gere uma ideia de conteúdo para ${dayName} no formato de ${randomFormat}, considerando os pilares: ${pilares.value}.`;
-                        // const response = await fetch('SUA_URL_API_GEMINI', { ... });
-                        // const data = await response.json();
-                        // suggestions.push({ dayName, date: formattedDate, format: randomFormat, suggestion: data.idea, isRegenerating: false });
-
-                        // Simulação para teste:
-                        await new Promise(resolve => setTimeout(resolve, 300)); // Pequeno delay para simular a API
-                        suggestions.push({ 
-                            dayName: dayName.charAt(0).toUpperCase() + dayName.slice(1), 
-                            date: formattedDate, 
-                            format: randomFormat, 
-                            suggestion: `Sugestão de ${randomFormat} para ${dayName.charAt(0).toUpperCase() + dayName.slice(1)} sobre ${pilares.value.split(';')[0] || 'tema genérico'}.`, 
-                            isRegenerating: false 
+                        <textarea v-model="persona" id="persona" rows="4" class="w-full px-3 py-2 border rounded-md shadow-sm focus:ring-2 focus://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey.value}", {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }),
                         });
+                        if (!response.ok) throw new Error((await response.json()).error?.message || 'Erro na API');
+
+                        const data = await response.json();
+                        if (data.candidates && data.candidates[0].content?.parts?.length > 0) {
+                            pilares.value = data.candidates[0].content.parts[0].text.trim();
+                        } else {
+                            throw new Error("Não foi possível gerar os pilares de conteúdo.");
+                        }
+                    } catch (error) {
+                        errorMessage.value = `Erro ao gerar pilares: ${error.message}`;
+                    } finally {
+                        isGeneratingPillars.value = false;
                     }
-                    weeklySchedule.value = suggestions;
+                };
 
-                } catch (error) {
-                    console.error('Erro ao gerar sugestões semanais:', error);
-                    errorMessage.value = 'Falha ao gerar sugestões semanais. Verifique sua chave da API ou tente novamente.';
-                } finally {
-                    isGeneratingSuggestions.value = false;
-                }
-            };
-
-            const regenerateSuggestion = async (day, index) => {
-                errorMessage.value = '';
-                if (!apiKey.value) {
-                    errorMessage.value = 'Preencha a Chave da API para regenerar sugestões.';
-                    return;
-                }
-                day.isRegenerating = true;
-                try {
-                    // Lógica para regenerar uma sugestão específica
-                    // const prompt = `Regenere uma ideia de conteúdo para ${day.dayName} no formato de ${day.format}, considerando os pilares: ${pilares.value}.`;
-                    // const response = await fetch('SUA_URL_API_GEMINI', { ... });
-                    // const data = await response.json();
-                    // weeklySchedule.value[index].suggestion = data.newIdea;
-
-                    // Simulação para teste:
-                    await new Promise(resolve => setTimeout(resolve, 1500));
-                    weeklySchedule.value[index].suggestion = `(REGENERADA) Nova sugestão para ${day.dayName} em ${day.format}: ${pilares.value.split(';')[1] || 'tema alternativo'}.`;
-                } catch (error) {
-                    console.error('Erro ao regenerar sugestão:', error);
-                    errorMessage.value = 'Falha ao regenerar sugestão. Tente novamente.';
-                } finally {
-                    day.isRegenerating = false;
-                }
-            };
-
-            const selectedDayTopic = ref('');
-            const selectDay = (day) => {
-                selectedDayTopic.value = day.suggestion; // Usa a sugestão do dia como tópico
-                topico.value = day.suggestion.split(':')[1] ? day.suggestion.split(':')[1].trim() : day.suggestion.trim(); // Tenta pegar o tópico após ':'
-                // Role para a seção de geração de conteúdo
-                document.getElementById('generation-module').scrollIntoView({ behavior: 'smooth' });
-            };
-
-            const generateContent = async () => {
-                errorMessage.value = '';
-                if (!apiKey.value || !pilares.value) {
-                    errorMessage.value = 'Preencha a Chave da API e os Pilares de Conteúdo.';
-                    return;
-                }
-                isLoading.value = true;
-                generatedContent.value = ''; // Limpa o conteúdo anterior
-                try {
-                    let prompt = `Como psicólogo(a), especialista na persona "${persona.value || 'qualquer público'}" e com base nos pilares "${pilares.value}", gere um conteúdo completo no formato de "${tipoConteudo.value}".`;
-                    if (topico.value) {
-                        prompt += ` O tópico específico é: "${topico.value}".`;
+                const generateWeeklySuggestions = async () => {
+                    // Adicionada validação de pilares
+                    if (!apiKey.value || !persona.value || !pilares.value) { 
+                        errorMessage.value = "Por favor, defina a Persona, os Pilares e insira sua chave da API para gerar sugestões."; 
+                        return; 
                     }
-                    prompt += ` O conteúdo deve ser rico, útil e profissional. Inclua hashtags relevantes no final. Use Markdown para formatação (títulos com ### ou ####, listas, negrito).`;
-
-                    // Aqui você integraria a chamada real à API do Google Gemini
-                    // Exemplo (requer SDK ou fetch direto com a estrutura da API Gemini):
-                    // const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey.value}`;
-                    // const response = await fetch(API_URL, {
-                    //     method: 'POST',
-                    //     headers: {
-                    //         'Content-Type': 'application/json',
-                    //     },
-                    //     body: JSON.stringify({
-                    //         contents: [{
-                    //             parts: [{
-                    //                 text: prompt
-                    //             }]
-                    //         }]
-                    //     }),
-                    // });
-
-                    // if (!response.ok) {
-                    //     const errorData = await response.json();
-                    //     throw new Error(`Erro da API: ${response.status} - ${errorData.error.message || 'Erro desconhecido'}`);
-                    // }
-
-                    // const data = await response.json();
-                    // const textResult = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Nenhum conteúdo gerado.';
-                    // generatedContent.value = textResult;
-
-
-                    // Simulação de resposta da API para desenvolvimento/teste:
-                    await new Promise(resolve => setTimeout(resolve, 3000)); // Simula o tempo de resposta da API
-                    let simulatedText = `### Dicas para Lidar com a Culpa Materna
-
-A culpa materna é um sentimento comum e complexo, que muitas mães experimentam em diferentes fases da maternidade.
-
-#### O que é a Culpa Materna?
-É a sensação de não ser boa o suficiente, de estar falhando em algum aspecto da criação dos filhos ou em conciliar a vida pessoal e profissional.
-
-* **Identifique os gatilhos:** Reflita sobre o que desencadeia sua culpa.
-* **Seja gentil consigo mesma:** Lembre-se que a perfeição não existe.
-* **Busque apoio:** Conversar com outras mães ou um profissional pode ajudar.
-
-**Exemplo de Reel:**
-"Eu não sou perfeita, e tudo bem!" (Mãe sorrindo, jogando o cabelo)
-* Texto na tela: "Sentindo culpa materna?" (Mãe com expressão de preocupação)
-* Texto na tela: "Você não está sozinha!" (Mãe abraçando o filho)
-* Texto na tela: "Busque apoio e seja gentil com você. Link na bio para mais dicas!" (Mãe confiante)
-
-#### Hashtags:
-#CulpaMaterna #MaternidadeReal #SaudeMentalMaterna #Autocuidado #Psicologia #ApoioMaterno`;
-                    generatedContent.value = simulatedText;
                     
-                    copyButtonText.value = 'Copiar'; // Resetar texto do botão
-                } catch (error) {
-                    console.error('Erro ao gerar conteúdo:', error);
-                    errorMessage.value = error.message || 'Falha ao gerar conteúdo. Verifique sua chave da API ou tente novamente.';
-                } finally {
-                    isLoading.value = false;
-                }
-            };
+                    isGeneratingSuggestions.value = true;
+                    errorMessage.value = '';
 
-            const copyToClipboard = () => {
-                navigator.clipboard.writeText(generatedContent.value).then(() => {
-                    copyButtonText.value = 'Copiado!';
-                }).catch(err => {
-                    console.error('Falha ao copiar:', err);
-                    copyButtonText.value = 'Erro ao Copiar';
+                    const prompt = `
+                        Aja como um especialista em marketing de conteúdo para psicólogos. Baseado na persona e nos pilares de conteúdo a seguir, crie 7 TÓPICOS de posts para o Instagram, um para cada dia da semana, começando pela Segunda-feira.
+                        - Persona: ${persona.value}
+                        - Pilares: ${pilares.value}
+                        
+                        REGRAS DE FORMATAÇÃO ESTRITAS:
+                        - A resposta DEVE ser exclusivamente uma lista não ordenada HTML (<ul>).
+                        - Cada item da lista (<li>) deve conter APENAS o texto da ideia do post. Não inclua o dia da semana ou o formato.
+                        - Exemplo de resposta: <ul><li>5 mitos sobre ansiedade</li><li>Exercício de respiração para acalmar a mente</li>...</ul>
+                        - É PROIBIDO usar Markdown, negrito, ou qualquer outra tag HTML além de <ul> e <li>.`;
+
+                    try {
+                        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey.value}`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }),
+                        });
+                        if (!response.ok) throw new Error((await response.json()).error?.message || 'Erro na API');
+                        
+                        const data = await response.json();
+                        if (data.candidates && data.candidates[0].content?.parts?.length > 0) {
+                            let rawText = data.candidates[0].content.parts[0].text.replace(/```html|```/g, '').trim();
+                            
+                            const tempDiv = document.createElement('div');
+                            tempDiv.innerHTML = rawText;
+                            const suggestions = Array.from(tempDiv.querySelectorAll('li')).map(li => li.textContent);
+
+                            weeklySchedule.value.forEach((day, index) => {
+                                if (suggestions[index]) {
+                                    day.suggestion = suggestions[index];
+                                }
+                            });
+
+                        } else {
+                            throw new Error("Não foi possível gerar sugestões.");
+                        }
+                    } catch (error) {
+                        errorMessage.value = `Erro ao gerar sugestões: ${error.message}`;
+                    } finally {
+                        isGeneratingSuggestions.value = false;
+                    }
+                };
+                
+                const regenerateSuggestion = async (day, index) => {
+                    // Adicionada validação de pilares
+                     if (!apiKey.value || !persona.value || !pilares.value) { 
+                        errorMessage.value = "Por favor, defina a Persona, os Pilares e insira sua chave da API para regenerar sugestões."; 
+                        return; 
+                    }
+                    
+                    weeklySchedule.value[index].isRegenerating = true;
+                    errorMessage.value = '';
+
+                    const prompt = `
+                        Aja como um especialista em marketing de conteúdo para psicólogos. Baseado na persona e pilares abaixo, crie UMA ÚNICA e NOVA ideia de post para o formato "${day.format}".
+                        - Persona: ${persona.value}
+                        - Pilares: ${pilares.value}
+                        - Ideia anterior (evite esta): ${day.suggestion}
+
+                        REGRAS: A resposta deve ser APENAS o texto da nova ideia. Sem HTML, sem Markdown, apenas texto puro.`;
+
+                    try {
+                        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey.value}`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }),
+                        });
+                        if (!response.ok) throw new Error((await response.json()).error?.message || 'Erro na API');
+                        
+                        const data = await response.json();
+                        if (data.candidates && data.candidates[0].content?.parts?.length > 0) {
+                            let newSuggestion = data.candidates[0].content.parts[0].text.trim();
+                            weeklySchedule.value[index].suggestion = newSuggestion;
+                        } else {
+                            throw new Error("Não foi possível gerar uma nova sugestão.");
+                        }
+                    } catch (error) {
+                        errorMessage.value = `Erro ao regenerar: ${error.message}`;
+                    } finally {
+                        weeklySchedule.value[index].isRegenerating = false;
+                    }
+                };
+
+                // --- Funções de Geração de Conteúdo ---
+                const createPrompt = () => {
+                    let prompt = `
+                        Aja como um especialista em marketing digital para psicólogos, seguindo rigorosamente as diretrizes éticas do Conselho Federal de Psicologia (CFP) do Brasil. Sua tarefa é criar um conteúdo para o Instagram que seja educativo, acolhedor e que gere conexão, sem nunca ser sensacionalista ou prometer resultados. É estritamente proibido usar termos como "preço", "desconto", "promoção", "garantia de cura" ou qualquer linguagem que mercantilize a saúde mental.
+                        Baseie-se nas seguintes informações estratégicas:
+                        - Persona (Público-Alvo): ${persona.value}
+                        - Pilares de Conteúdo: ${pilares.value}
+                        Agora, crie o seguinte conteúdo:
+                        - Tipo de Conteúdo: ${tipoConteudo.value}
+                        ${topico.value ? `- Tópico Específico: ${topico.value}` : ''}
+                        Instruções para o formato "${tipoConteudo.value}":`;
+
+                    switch (tipoConteudo.value) {
+                        case 'Reel': prompt += " Crie um roteiro curto e dinâmico para um Reel de até 30 segundos. Inclua sugestões de cenas/texto na tela e uma narração em off."; break;
+                        case 'Carrossel': prompt += " Estruture um post em formato carrossel com 5 slides. Mantenha o texto de cada slide MUITO CONCISO (idealmente 1-2 frases curtas). O Slide 1 deve ser um título de impacto. Os slides 2 a 4 devem apresentar dicas ou passos de forma direta. O Slide 5 deve ser uma chamada para ação (CTA) ética e breve."; break;
+                        case 'Legenda Longa': prompt += " Escreva uma legenda longa e reflexiva. Comece com uma frase de impacto. Desenvolva o tópico de forma aprofundada. Finalize com uma pergunta ou CTA para estimular a interação."; break;
+                        case 'Story Interativo': prompt += " Crie o texto para um Story interativo. Sugira uma imagem de fundo e o texto para uma enquete (com duas opções) ou uma caixa de perguntas."; break;
+                        case 'Live': prompt += " Crie um título e um roteiro com os principais tópicos para uma Live de 20-30 minutos. A estrutura deve conter uma introdução, desenvolvimento em 3 a 4 pontos, e um fechamento com espaço para perguntas."; break;
+                    }
+                    
+                    prompt += `\n\nAo final, sempre inclua uma seção de hashtags e um CTA ético.
+                     **REGRAS DE FORMATAÇÃO ESTRITAS:**
+                     1.  **A resposta DEVE ser exclusivamente em HTML limpo.**
+                     2.  Use as seguintes tags: <h3> para títulos principais, <h4> para subtítulos (como 'Slide 1'), <p> para parágrafos, <ul> e <li> para listas, e <strong> para negrito.
+                     3.  Para a lista de hashtags, coloque-as dentro de um parágrafo com a classe "hashtags", separadas por espaços. Ex: <p class="hashtags">#psicologia #saudemental</p>.
+                     4.  **É PROIBIDO usar CUALQUER elemento de Markdown.** Não use asteriscos (*), hashtags (#) fora da lista de hashtags, ou delimitadores de bloco de código como \`\`\`html ou \`\`\`.
+                     5.  A resposta não deve conter as tags <html>, <head>, ou <body>. Apenas o conteúdo HTML que será inserido na div.`;
+                    return prompt;
+                };
+
+                const generateContent = async () => {
+                    if (!apiKey.value) { errorMessage.value = "Por favor, insira sua chave da API do Google AI."; return; }
+                    if (!persona.value || !pilares.value) { errorMessage.value = "Por favor, preencha os campos de Persona e Pilares de Conteúdo."; return; }
+
+                    isLoading.value = true;
+                    generatedContent.value = '';
+                    errorMessage.value = '';
+
+                    const fullPrompt = createPrompt();
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey.value}`;
+
+                    try {
+                        const response = await fetch(apiUrl, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ contents: [{ parts: [{ text: fullPrompt }] }] }),
+                        });
+                        if (!response.ok) throw new Error((await response.json()).error?.message || `Erro na API: ${response.statusText}`);
+                        
+                        const data = await response.json();
+                        if (data.candidates && data.candidates[0].content?.parts?.length > 0) {
+                            let rawText = data.candidates[0].content.parts[0].text;
+                            generatedContent.value = rawText.replace(/```html|```/g, '').trim();
+                        } else if (data.candidates && data.candidates[0].finishReason === 'SAFETY') {
+                             throw new Error("A resposta foi bloqueada por políticas de segurança. Tente reformular seu tópico.");
+                        } else {
+                            throw new Error("A resposta da API não continha o conteúdo esperado ou estava vazia.");
+                        }
+                    } catch (error) {
+                        errorMessage.value = `Erro ao gerar conteúdo: ${error.message}`;
+                    } finally {
+                        isLoading.value = false;
+                    }
+                };
+                
+                // --- Funções de Utilidade ---
+                const copyToClipboard = () => {
+                    if(generatedContent.value) {
+                        const tempDiv = document.createElement('div');
+                        tempDiv.innerHTML = renderedHtml.value;
+                        const textToCopy = tempDiv.textContent || tempDiv.innerText || "";
+                        navigator.clipboard.writeText(textToCopy).then(() => {
+                            copyButtonText.value = 'Copiado!';
+                            setTimeout(() => { copyButtonText.value = 'Copiar'; }, 2000);
+                        }).catch(err => { console.error('Erro ao copiar texto: ', err); });
+                    }
+                };
+                
+                const renderedHtml = computed(() => {
+                    if (isLoading.value) return '<div class="flex justify-center items-center h-full"><p style="color: var(--subtext0)">Gerando conteúdo... por favor, aguarde.</p></div>';
+                    if (generatedContent.value) return generatedContent.value;
+                    return '<div class="flex justify-center items-center h-full"><p style="color: var(--overlay0)">Seu conteúdo gerado aparecerá aqui.</p></div>';
                 });
-            };
+                
+                // --- Ciclo de Vida e Watchers ---
+                const loadFromLocalStorage = () => {
+                    persona.value = localStorage.getItem('psicoAppPersona') || 'Mães de primeira viagem (25-35 anos) enfrentando ansiedade, sobrecarga e os desafios do puerpério. Elas buscam validação, dicas práticas e um espaço seguro para falar sobre suas dificuldades sem julgamento.';
+                    pilares.value = localStorage.getItem('psicoAppPilares') || '1. Saúde Mental no Puerpério; 2. Autocuidado para Mães; 3. Relacionamentos após o bebê; 4. Desmistificando a Terapia Parental.';
+                };
 
-            // Processa o conteúdo gerado para renderizar Markdown
-            const renderedHtml = computed(() => {
-                // Implementação simples de Markdown para HTML
-                let html = generatedContent.value;
-                html = html.replace(/### (.*)/g, '<h3>$1</h3>');
-                html = html.replace(/#### (.*)/g, '<h4>$1</h4>');
-                html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-                html = html.replace(/\* (.*)/g, '<li>$1</li>');
-                // Adiciona uma classe para hashtags para estilização
-                html = html.replace(/#(?![\s<])([\w-]+)/g, '<span class="hashtags">#$1</span>');
-                return html;
-            });
+                // Watchers para salvar persona e pilares no localStorage
+                watch(persona, (newVal) => localStorage.setItem('psicoAppPersona', newVal));
+                watch(pilares, (newVal) => localStorage.setItem('psicoAppPilares', newVal));
 
-            // --- Life Cycle Hooks ---
-            onMounted(() => {
-                initializeApiKey(); // Inicializa a chave da API quando o componente é montado
-                // Os watchers para persona e pilares continuam, pois dependem do localStorage
-                watch(persona, (newValue) => {
-                    localStorage.setItem('psicoAppPersona', newValue);
+                onMounted(() => {
+                    initializeApiKey(); // Inicializa a chave da API (do localStorage)
+                    loadFromLocalStorage(); // Carrega persona e pilares padrão/salvos
+                    generateWeeklySchedule(); // Gera a estrutura da semana
                 });
-                watch(pilares, (newValue) => {
-                    localStorage.setItem('psicoAppPilares', newValue);
-                });
-            });
 
-            // --- Retornar estado e funções para o template ---
-            return {
-                apiKey,
-                apiKeyFromLocalStorage, // Alterado para apiKeyFromLocalStorage
-                persona,
-                pilares,
-                tipoConteudo,
-                topico,
-                isLoading,
-                isGeneratingPillars,
-                isGeneratingSuggestions,
-                generatedContent,
-                errorMessage,
-                copyButtonText,
-                weeklySchedule,
-                personaPlaceholderText,
-                pilaresPlaceholderText,
-                generatePillars,
-                generateWeeklySuggestions,
-                regenerateSuggestion,
-                selectDay,
-                generateContent,
-                copyToClipboard,
-                renderedHtml,
-                saveApiKey, // Nova função para salvar
-                clearApiKey // Nova função para remover
-            };
-        }
-    }).mount('#app');
-</script>
+                return { 
+                    apiKey, 
+                    apiKeyFromLocalStorage, // Usado para controlar visibilidade do input de API Key
+                    persona, 
+                    pilares, 
+                    tipoConteudo, 
+                    topico, 
+                    isLoading, 
+                    generatedContent, 
+                    errorMessage, 
+                    generateContent, 
+                    copyToClipboard, 
+                    copyButtonText, 
+                    renderedHtml, 
+                    weeklySchedule, 
+                    selectDay, 
+                    generateWeeklySuggestions, 
+                    isGeneratingSuggestions, 
+                    regenerateSuggestion, 
+                    generatePillars, 
+                    isGeneratingPillars,
+                    // Funções adicionadas para o gerenciamento da API Key via localStorage
+                    saveApiKey,
+                    clearApiKey
+                };
+            }
+        }).mount('#app');
+    </script>
 </body>
 </html>
